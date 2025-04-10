@@ -10,8 +10,6 @@ const socketIo = require('socket.io');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const listingRoutes = require('./routes/listings');
-const marketplaceRoutes = require('./routes/marketplace');
-const foodRoutes = require('./routes/food');
 const postRoutes = require('./routes/posts');
 const messageRoutes = require('./routes/messages');
 const notificationRoutes = require('./routes/notifications');
@@ -44,8 +42,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus-ma
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/listings', listingRoutes);
-app.use('/api/marketplace', marketplaceRoutes);
-app.use('/api/food', foodRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -90,7 +86,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4321;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -1,16 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../api/axios';
+import { authService } from '../../services/api';
 
 // Async thunk actions
 export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      return response.data;
+      const response = await authService.login({ email, password });
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Login failed' });
     }
   }
 );
@@ -19,11 +18,10 @@ export const register = createAsyncThunk(
   'auth/register',
   async ({ name, email, password }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/register', { name, email, password });
-      localStorage.setItem('token', response.data.token);
-      return response.data;
+      const response = await authService.register({ name, email, password });
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Registration failed' });
     }
   }
 );
@@ -32,10 +30,10 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/auth/me');
-      return response.data;
+      const response = await authService.getCurrentUser();
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch user' });
     }
   }
 );
@@ -55,7 +53,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      localStorage.removeItem('token');
+      authService.logout();
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;

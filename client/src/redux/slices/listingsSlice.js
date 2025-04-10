@@ -1,15 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../api/axios';
+import { listingService } from '../../services/api';
 
 // Async thunk actions
 export const getListings = createAsyncThunk(
   'listings/getListings',
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await api.get('/listings');
-      return response.data;
+      const response = await listingService.getListings(params);
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch listings' });
     }
   }
 );
@@ -18,10 +18,10 @@ export const getListingById = createAsyncThunk(
   'listings/getListingById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/listings/${id}`);
-      return response.data;
+      const response = await listingService.getListing(id);
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch listing' });
     }
   }
 );
@@ -30,10 +30,10 @@ export const createListing = createAsyncThunk(
   'listings/createListing',
   async (listingData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/listings', listingData);
-      return response.data;
+      const response = await listingService.createListing(listingData);
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Failed to create listing' });
     }
   }
 );
@@ -42,10 +42,10 @@ export const updateListing = createAsyncThunk(
   'listings/updateListing',
   async ({ id, listingData }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/listings/${id}`, listingData);
-      return response.data;
+      const response = await listingService.updateListing(id, listingData);
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Failed to update listing' });
     }
   }
 );
@@ -54,10 +54,10 @@ export const deleteListing = createAsyncThunk(
   'listings/deleteListing',
   async (id, { rejectWithValue }) => {
     try {
-      await api.delete(`/listings/${id}`);
+      await listingService.deleteListing(id);
       return id;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Failed to delete listing' });
     }
   }
 );
