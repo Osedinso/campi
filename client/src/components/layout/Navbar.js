@@ -4,10 +4,65 @@ import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { logout } from '../../redux/slices/authSlice';
 
+// Cart Icon Component
+const CartIcon = styled(Link)`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #555;
+  margin-right: 1rem;
+  text-decoration: none;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #ff6b35;
+  }
+`;
+
+const CartCount = styled.span`
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ff6b35;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+// Become a Chef Button
+const BecomeChefButton = styled(Link)`
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  margin-right: 1rem;
+  
+  &:hover {
+    background-color: #ff5719;
+  }
+  
+  @media (max-width: 900px) {
+    display: none;
+  }
+`;
+
 const NavContainer = styled.nav`
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -173,8 +228,8 @@ const UserMenu = styled.div`
 `;
 
 const UserAvatar = styled.div`
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: #e0e0e0;
   display: flex;
@@ -183,36 +238,33 @@ const UserAvatar = styled.div`
   cursor: pointer;
   color: #666;
   font-size: 0.875rem;
-  font-weight: bold;
 `;
 
 const UserMenuDropdown = styled.div`
+  display: ${props => props.isOpen ? 'block' : 'none'};
   position: absolute;
-  top: 100%;
+  top: calc(100% + 0.5rem);
   right: 0;
-  margin-top: 0.5rem;
+  width: 220px;
   background-color: white;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 200px;
-  z-index: 1000;
-  display: ${props => props.isOpen ? 'block' : 'none'};
+  z-index: 10;
   overflow: hidden;
 `;
 
 const UserInfo = styled.div`
   padding: 1rem;
   border-bottom: 1px solid #eee;
-  text-align: center;
 `;
 
 const UserName = styled.div`
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.25rem;
 `;
 
 const UserEmail = styled.div`
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #666;
 `;
 
@@ -283,64 +335,56 @@ const Navbar = () => {
   
   // Mock unread messages count - would come from Redux in real app
   const unreadMessages = 3;
+  // Mock cart items count - would come from Redux in real app
+  const cartItemCount = 3;
   
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
-    setUserMenuOpen(false);
-  };
-  
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/marketplace?search=${encodeURIComponent(searchTerm)}`);
-      setSearchTerm('');
-    }
-  };
-  
-  // Close user menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setUserMenuOpen(false);
-      }
-    };
-
+    // Close menu when clicking outside
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
   
-  // Close menus when route changes
-  useEffect(() => {
-    setMobileMenuOpen(false);
-    setUserMenuOpen(false);
-  }, [location]);
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/');
+  };
+  
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+  
+  const handleClickOutside = (event) => {
+    if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+      setUserMenuOpen(false);
+    }
+  };
   
   // Get user initials for avatar
   const getUserInitials = () => {
-    if (!user || !user.name) return '?';
+    if (!user || !user.name) return '👤';
     
-    const nameParts = user.name.split(' ');
-    if (nameParts.length >= 2) {
-      return `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`.toUpperCase();
-    }
-    return nameParts[0].charAt(0).toUpperCase();
+    const names = user.name.split(' ');
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    
+    return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
   };
-
+  
   return (
     <NavContainer>
       <NavContent>
-        <Logo to="/">Campus Marketplace</Logo>
+        <Logo to="/">Campi</Logo>
         
-        {/* Search bar */}
         <NavSearch>
           <form onSubmit={handleSearch}>
             <SearchIcon>🔍</SearchIcon>
             <SearchInput 
               type="text" 
-              placeholder="Search marketplace..." 
+              placeholder="Search items, food, services..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -351,9 +395,19 @@ const Navbar = () => {
         <NavLinks>
           <NavLink to="/" className={location.pathname === '/' ? 'active' : ''}>Home</NavLink>
           <NavLink to="/marketplace" className={location.pathname.includes('/marketplace') ? 'active' : ''}>Marketplace</NavLink>
+          <NavLink to="/food-marketplace" className={location.pathname.includes('/food-marketplace') ? 'active' : ''}>Food</NavLink>
           
           {isAuthenticated ? (
             <>
+              {/* Become a Chef Button */}
+              <BecomeChefButton to="/create-food-listing">Become a Chef</BecomeChefButton>
+              
+              {/* Cart Icon */}
+              <CartIcon to="/cart">
+                🛒
+                {cartItemCount > 0 && <CartCount>{cartItemCount}</CartCount>}
+              </CartIcon>
+              
               <NavLink to="/social" className={location.pathname.includes('/social') ? 'active' : ''}>Social</NavLink>
               <NavLink to="/messages" className={location.pathname.includes('/messages') ? 'active' : ''}>
                 <NotificationBadge count={unreadMessages}>Messages</NotificationBadge>
@@ -374,6 +428,9 @@ const Navbar = () => {
                   <DropdownLink to={`/profile/${user?._id}`}>👤 My Profile</DropdownLink>
                   <DropdownLink to="/dashboard">📊 Dashboard</DropdownLink>
                   <DropdownLink to="/marketplace/create">📝 Create Listing</DropdownLink>
+                  <DropdownLink to="/create-food-listing">🍲 Become a Chef</DropdownLink>
+                  <DropdownLink to="/cart">🛒 My Cart</DropdownLink>
+                  <DropdownLink to="/orders">📦 My Orders</DropdownLink>
                   <DropdownButton onClick={handleLogout}>🚪 Logout</DropdownButton>
                 </UserMenuDropdown>
               </UserMenu>
@@ -395,14 +452,18 @@ const Navbar = () => {
         <NavLinksMobile isOpen={mobileMenuOpen}>
           <NavLink to="/">Home</NavLink>
           <NavLink to="/marketplace">Marketplace</NavLink>
+          <NavLink to="/food-marketplace">Food</NavLink>
           
           {isAuthenticated ? (
             <>
+              <NavLink to="/create-food-listing">Become a Chef</NavLink>
+              <NavLink to="/cart">My Cart ({cartItemCount})</NavLink>
               <NavLink to="/social">Social Hub</NavLink>
               <NavLink to="/messages">Messages</NavLink>
               <NavLink to="/dashboard">Dashboard</NavLink>
               <NavLink to={`/profile/${user?._id}`}>My Profile</NavLink>
               <NavLink to="/marketplace/create">Create Listing</NavLink>
+              <NavLink to="/orders">My Orders</NavLink>
               <NavButton onClick={handleLogout}>Logout</NavButton>
             </>
           ) : (

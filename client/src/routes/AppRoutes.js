@@ -25,6 +25,7 @@ import Messaging from '../pages/Messaging';
 // Food Marketplace pages
 import FoodMarketplace from '../pages/FoodMarketplace';
 import CreateFoodListing from '../pages/CreateFoodListing';
+import Cart from '../pages/Cart';
 
 // Private route component
 const PrivateRoute = ({ children }) => {
@@ -118,6 +119,16 @@ const AppRoutes = () => {
           element={
             <PrivateRoute>
               <Messaging />
+            </PrivateRoute>
+          } 
+        />
+        
+        {/* Cart route */}
+        <Route 
+          path="cart" 
+          element={
+            <PrivateRoute>
+              <Cart />
             </PrivateRoute>
           } 
         />
