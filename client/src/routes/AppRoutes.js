@@ -22,6 +22,10 @@ import SocialFeed from '../pages/SocialFeed';
 import Profile from '../pages/Profile';
 import Messaging from '../pages/Messaging';
 
+// Food Marketplace pages
+import FoodMarketplace from '../pages/FoodMarketplace';
+import CreateFoodListing from '../pages/CreateFoodListing';
+
 // Private route component
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
@@ -64,6 +68,29 @@ const AppRoutes = () => {
             } 
           />
         </Route>
+        
+        {/* Food Marketplace routes */}
+        <Route path="food-marketplace">
+          <Route index element={<FoodMarketplace />} />
+          <Route 
+            path="create" 
+            element={
+              <PrivateRoute>
+                <CreateFoodListing />
+              </PrivateRoute>
+            } 
+          />
+        </Route>
+        
+        {/* Direct route for creating food listing */}
+        <Route 
+          path="create-food-listing" 
+          element={
+            <PrivateRoute>
+              <CreateFoodListing />
+            </PrivateRoute>
+          } 
+        />
         
         {/* Social routes */}
         <Route 
