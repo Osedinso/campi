@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { usColleges, campusAreas, academicDepartments, noChefMessages } from '../data/usColleges';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const FoodMarketplaceContainer = styled.div`
@@ -385,7 +386,13 @@ const FoodMarketplace = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [universityFilter, setUniversityFilter] = useState('');
   const [sortOption, setSortOption] = useState('newest');
+  
+  // Handle university filter change
+  const handleUniversityChange = (e) => {
+    setUniversityFilter(e.target.value);
+  };
   
   useEffect(() => {
     // Simulate API loading
@@ -396,6 +403,23 @@ const FoodMarketplace = () => {
       // Filter by category (if not 'All')
       if (activeCategory !== 'All') {
         filteredItems = filteredItems.filter(item => item.category === activeCategory);
+      }
+      
+      // Filter by university (if selected)
+      if (universityFilter) {
+        // In a real app, we would filter by the specific university
+        // For now, we'll simulate this with region mapping
+        const universityRegion = usColleges.find(uni => uni.name === universityFilter)?.region || '';
+        if (universityRegion) {
+          const regionMap = {
+            'northeast': ['North Campus', 'Student Center'],
+            'midwest': ['East Dorms', 'Library'],
+            'south': ['South Campus'],
+            'west': ['West Campus', 'Downtown']
+          };
+          const matchingLocations = regionMap[universityRegion] || [];
+          filteredItems = filteredItems.filter(item => matchingLocations.includes(item.location));
+        }
       }
       
       // Filter by location (if selected)
@@ -490,6 +514,20 @@ const FoodMarketplace = () => {
           </FilterGroup>
           
           <FilterGroup>
+            <Label htmlFor="university">University</Label>
+            <Select 
+              id="university"
+              value={universityFilter}
+              onChange={handleUniversityChange}
+            >
+              <option value="">All Universities</option>
+              {usColleges.slice(0, 15).map(college => (
+                <option key={college.id} value={college.name}>{college.name}</option>
+              ))}
+            </Select>
+          </FilterGroup>
+          
+          <FilterGroup>
             <Label htmlFor="sort">Sort By</Label>
             <Select 
               id="sort"
@@ -505,20 +543,16 @@ const FoodMarketplace = () => {
           </FilterGroup>
           
           <FilterGroup>
-            <Label htmlFor="location">Pickup Location</Label>
+            <Label htmlFor="location">Campus Area</Label>
             <Select 
               id="location"
               value={locationFilter}
               onChange={handleLocationChange}
             >
-              <option value="">All Locations</option>
-              <option value="North Campus">North Campus</option>
-              <option value="South Campus">South Campus</option>
-              <option value="East Dorms">East Dorms</option>
-              <option value="West Campus">West Campus</option>
-              <option value="Student Center">Student Center</option>
-              <option value="Library">Library</option>
-              <option value="Downtown">Downtown</option>
+              <option value="">All Areas</option>
+              {campusAreas.slice(1).map(area => (
+                <option key={area.id} value={area.name}>{area.name}</option>
+              ))}
             </Select>
           </FilterGroup>
           
@@ -570,8 +604,21 @@ const FoodMarketplace = () => {
         </FoodGrid>
       ) : (
         <NoResults>
-          <h3>No food items found</h3>
-          <p>Try changing your filters or be the first to post a food item!</p>
+          <h3>{(universityFilter || locationFilter) ? 'Be the first chef in this area!' : 'No food items found'}</h3>
+          <p>
+            {universityFilter ? 
+              noChefMessages.becomeFirst[Math.floor(Math.random() * noChefMessages.becomeFirst.length)]
+                .replace('{school}', universityFilter)
+                .replace('{area}', locationFilter || 'this area') :
+              locationFilter ? 
+                noChefMessages.tryAgain[Math.floor(Math.random() * noChefMessages.tryAgain.length)]
+                  .replace('{school}', 'your university')
+                  .replace('{area}', locationFilter) :
+                'Try changing your filters or be the first to post a food item!'}
+          </p>
+          {(universityFilter || locationFilter) && (
+            <CreateFoodButton to="/create-food-listing">Become a Chef</CreateFoodButton>
+          )}
         </NoResults>
       )}
     </FoodMarketplaceContainer>

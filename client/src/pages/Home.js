@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { usColleges, campusAreas, academicDepartments, noChefMessages } from '../data/usColleges';
 
 const HeroSection = styled.section`
   position: relative;
@@ -531,7 +532,147 @@ const ViewAllButton = styled(Link)`
   }
 `;
 
+// Filter components for the chef recommendations
+const FilterContainer = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+`;
+
+const FilterGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const FilterLabel = styled.label`
+  font-weight: 500;
+  color: #555;
+`;
+
+const FilterSelect = styled.select`
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  min-width: 180px;
+  color: #333;
+  cursor: pointer;
+  
+  &:focus {
+    outline: none;
+    border-color: #ff6b35;
+  }
+`;
+
+// Empty results components
+const EmptyResultsContainer = styled.div`
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 2rem 0;
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #ccc;
+`;
+
+const EmptyTitle = styled.h3`
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 1rem;
+`;
+
+const EmptyDescription = styled.p`
+  color: #777;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+`;
+
+const ResetFiltersButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #ff5719;
+    transform: translateY(-2px);
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const BecomeChefButton = styled(Link)`
+  padding: 0.75rem 1.5rem;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  
+  &:hover {
+    background-color: #303f9f;
+    transform: translateY(-2px);
+  }
+`;
+
+// Badge components for food cards
+const LocationBadge = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  z-index: 2;
+`;
+
+const SchoolBadge = styled.div`
+  position: absolute;
+  top: 40px;
+  left: 10px;
+  background-color: rgba(255, 107, 53, 0.9);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  z-index: 2;
+`;
+
 // Mock chef recommendations data
+// Default selection for university and campus area
+const DEFAULT_UNIVERSITY = usColleges[0];
+const DEFAULT_AREA = campusAreas[0];
+
+// Mock chef recommendations data with location and school information
 const mockFoodItems = [
   {
     id: 1,
@@ -542,7 +683,12 @@ const mockFoodItems = [
     rating: 4.7,
     ratingCount: 34,
     chefImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
-    image: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+    image: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'north',
+    locationName: 'North Campus',
+    school: 'business',
+    schoolName: 'Business School',
+    cuisine: 'Italian'
   },
   {
     id: 2,
@@ -553,7 +699,12 @@ const mockFoodItems = [
     rating: 4.5,
     ratingCount: 28,
     chefImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
-    image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+    image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'east',
+    locationName: 'East Dorms',
+    school: 'engineering',
+    schoolName: 'Engineering School',
+    cuisine: 'Thai'
   },
   {
     id: 3,
@@ -564,7 +715,12 @@ const mockFoodItems = [
     rating: 4.8,
     ratingCount: 42,
     chefImage: 'https://images.unsplash.com/photo-1500048993953-d23a436266cf?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'south',
+    locationName: 'South Campus',
+    school: 'arts',
+    schoolName: 'Arts & Sciences',
+    cuisine: 'American'
   },
   {
     id: 4,
@@ -575,7 +731,12 @@ const mockFoodItems = [
     rating: 4.9,
     ratingCount: 51,
     chefImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
-    image: 'https://images.unsplash.com/photo-1562007908-17c67e878c6b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+    image: 'https://images.unsplash.com/photo-1562007908-17c67e878c6b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'west',
+    locationName: 'West Campus',
+    school: 'education',
+    schoolName: 'Education School',
+    cuisine: 'Dessert'
   },
   {
     id: 5,
@@ -586,7 +747,12 @@ const mockFoodItems = [
     rating: 4.6,
     ratingCount: 37,
     chefImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
-    image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+    image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'center',
+    locationName: 'Student Center',
+    school: 'medicine',
+    schoolName: 'Medical School',
+    cuisine: 'Indian'
   },
   {
     id: 6,
@@ -597,12 +763,56 @@ const mockFoodItems = [
     rating: 4.9,
     ratingCount: 45,
     chefImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
-    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'library',
+    locationName: 'Library',
+    school: 'law',
+    schoolName: 'Law School',
+    cuisine: 'Dessert'
+  },
+  {
+    id: 7,
+    name: 'Fresh Avocado Toast',
+    chef: 'Sarah Kim',
+    description: 'Freshly mashed avocado on sourdough toast with cherry tomatoes, microgreens, and a sprinkle of red pepper flakes.',
+    price: 8.49,
+    rating: 4.6,
+    ratingCount: 32,
+    chefImage: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
+    image: 'https://images.unsplash.com/photo-1588137378633-dea1336ce1e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'north',
+    locationName: 'North Campus',
+    school: 'arts',
+    schoolName: 'Arts & Sciences',
+    cuisine: 'Breakfast'
+  },
+  {
+    id: 8,
+    name: 'Spanish Paella',
+    chef: 'Miguel Rodriguez',
+    description: 'Traditional Spanish rice dish with saffron, chicken, seafood, and seasonal vegetables. Serves two people.',
+    price: 15.99,
+    rating: 4.8,
+    ratingCount: 19,
+    chefImage: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
+    image: 'https://images.unsplash.com/photo-1515443961218-a51367888e4b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    location: 'east',
+    locationName: 'East Dorms',
+    school: 'business',
+    schoolName: 'Business School',
+    cuisine: 'Spanish'
   }
 ];
 
 const Home = () => {
   const [showFoodSection, setShowFoodSection] = useState(false);
+  const [selectedUniversity, setSelectedUniversity] = useState('all');
+  const [selectedArea, setSelectedArea] = useState('all');
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [filteredFoodItems, setFilteredFoodItems] = useState(mockFoodItems);
+  
+  // Store if we've found any chefs for the empty state message handling
+  const [noChefs, setNoChefs] = useState(false);
   
   // Toggle food section when the food button is clicked
   const handleFoodButtonClick = (e) => {
@@ -625,6 +835,95 @@ const Home = () => {
   const handleVideoLoaded = () => {
     setVideoLoaded(true);
   };
+  
+  // Handle university change
+  const handleUniversityChange = (e) => {
+    setSelectedUniversity(e.target.value);
+  };
+  
+  // Handle campus area change
+  const handleAreaChange = (e) => {
+    setSelectedArea(e.target.value);
+  };
+  
+  // Handle department change
+  const handleDepartmentChange = (e) => {
+    setSelectedDepartment(e.target.value);
+  };
+  
+  // Get a random no chef message
+  const getRandomNoChefMessage = () => {
+    const messages = selectedUniversity === 'all' ? 
+      noChefMessages.tryAgain : noChefMessages.becomeFirst;
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    
+    let message = messages[randomIndex];
+    const universityName = usColleges.find(uni => uni.id === selectedUniversity)?.name || 'this university';
+    const areaName = campusAreas.find(area => area.id === selectedArea)?.name || 'this area';
+    
+    message = message.replace('{school}', universityName).replace('{area}', areaName);
+    return message;
+  };
+  
+  // Filter food items based on selected university, area, and department
+  useEffect(() => {
+    let filtered = mockFoodItems;
+    
+    // Map our old data structure to new filters for demonstration
+    // In a real app, the backend would handle this properly
+    if (selectedUniversity !== 'all') {
+      const universityRegion = usColleges.find(uni => uni.id === selectedUniversity)?.region || '';
+      filtered = filtered.filter(item => {
+        const itemRegion = {
+          'north': 'northeast',
+          'south': 'south',
+          'east': 'midwest',
+          'west': 'west',
+          'center': 'northeast',
+          'library': 'midwest',
+        }[item.location] || 'northeast';
+        
+        return itemRegion === universityRegion;
+      });
+    }
+    
+    // Apply area filter if not 'all'
+    if (selectedArea !== 'all') {
+      filtered = filtered.filter(item => {
+        // Map our old location structure to new campus areas
+        const mappedArea = {
+          'north': 'north',
+          'south': 'south',
+          'east': 'east',
+          'west': 'west',
+          'center': 'central',
+          'library': 'library'
+        }[item.location] || 'central';
+        
+        return mappedArea === selectedArea;
+      });
+    }
+    
+    // Apply department filter if not 'all'
+    if (selectedDepartment !== 'all') {
+      filtered = filtered.filter(item => {
+        // Map our old school structure to new departments
+        const mappedDepartment = {
+          'business': 'business',
+          'engineering': 'engineering',
+          'arts': 'arts_sciences',
+          'medicine': 'medicine',
+          'law': 'law',
+          'education': 'education'
+        }[item.school] || 'arts_sciences';
+        
+        return mappedDepartment === selectedDepartment;
+      });
+    }
+    
+    setNoChefs(filtered.length === 0);
+    setFilteredFoodItems(filtered);
+  }, [selectedUniversity, selectedArea, selectedDepartment]);
 
   return (
     <>
@@ -672,6 +971,37 @@ const Home = () => {
           </ChefRecsSubtitle>
         </ChefRecsSectionHeader>
         
+        {/* Enhanced Filters with US Colleges Dataset */}
+        <FilterContainer>
+          <FilterGroup>
+            <FilterLabel>University:</FilterLabel>
+            <FilterSelect value={selectedUniversity} onChange={handleUniversityChange}>
+              <option value="all">All Universities</option>
+              {usColleges.map(college => (
+                <option key={college.id} value={college.id}>{college.name}</option>
+              ))}
+            </FilterSelect>
+          </FilterGroup>
+          
+          <FilterGroup>
+            <FilterLabel>Campus Area:</FilterLabel>
+            <FilterSelect value={selectedArea} onChange={handleAreaChange}>
+              {campusAreas.map(area => (
+                <option key={area.id} value={area.id}>{area.name}</option>
+              ))}
+            </FilterSelect>
+          </FilterGroup>
+          
+          <FilterGroup>
+            <FilterLabel>Department:</FilterLabel>
+            <FilterSelect value={selectedDepartment} onChange={handleDepartmentChange}>
+              {academicDepartments.map(dept => (
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
+              ))}
+            </FilterSelect>
+          </FilterGroup>
+        </FilterContainer>
+        
         <ScrollControls>
           <ScrollButton onClick={() => document.getElementById('food-scroll').scrollBy({left: -1000, behavior: 'smooth'})}>
             ←
@@ -682,34 +1012,60 @@ const Home = () => {
         </ScrollControls>
         
         <ScrollableContainer>
-          <FoodScrollWrapper id="food-scroll">
-            {mockFoodItems.map(food => (
-              <FoodCard key={food.id}>
-                <FoodImage image={food.image}>
-                  {!food.image && 'Food Image'}
-                  <ChefAvatarWrapper>
-                    <ChefAvatar src={food.chefImage} alt={food.chef} />
-                  </ChefAvatarWrapper>
-                </FoodImage>
-                <FoodInfo>
-                  <FoodName>{food.name}</FoodName>
-                  <ChefName>{food.chef}</ChefName>
-                  
-                  <RatingWrapper>
-                    <Rating>★★★★★</Rating>
-                    <RatingCount>{food.rating} ({food.ratingCount})</RatingCount>
-                  </RatingWrapper>
-                  
-                  <FoodDescription>{food.description}</FoodDescription>
-                  
-                  <FoodDetailsRow>
-                    <FoodPrice>${food.price.toFixed(2)}</FoodPrice>
-                    <OrderButton>Order Now</OrderButton>
-                  </FoodDetailsRow>
-                </FoodInfo>
-              </FoodCard>
-            ))}
-          </FoodScrollWrapper>
+          {filteredFoodItems.length > 0 ? (
+            <FoodScrollWrapper id="food-scroll">
+              {filteredFoodItems.map(food => (
+                <FoodCard key={food.id}>
+                  <LocationBadge>{food.locationName}</LocationBadge>
+                  <SchoolBadge>{food.schoolName}</SchoolBadge>
+                  <FoodImage image={food.image}>
+                    {!food.image && 'Food Image'}
+                    <ChefAvatarWrapper>
+                      <ChefAvatar src={food.chefImage} alt={food.chef} />
+                    </ChefAvatarWrapper>
+                  </FoodImage>
+                  <FoodInfo>
+                    <FoodName>{food.name}</FoodName>
+                    <ChefName>{food.chef}</ChefName>
+                    
+                    <RatingWrapper>
+                      <Rating>★★★★★</Rating>
+                      <RatingCount>{food.rating} ({food.ratingCount})</RatingCount>
+                    </RatingWrapper>
+                    
+                    <FoodDescription>{food.description}</FoodDescription>
+                    
+                    <FoodDetailsRow>
+                      <FoodPrice>${food.price.toFixed(2)}</FoodPrice>
+                      <OrderButton>Order Now</OrderButton>
+                    </FoodDetailsRow>
+                  </FoodInfo>
+                </FoodCard>
+              ))}
+            </FoodScrollWrapper>
+          ) : (
+            <EmptyResultsContainer>
+              <EmptyIcon>🍽️</EmptyIcon>
+              <EmptyTitle>{selectedUniversity === 'all' ? 'No chefs found in this area' : 'Be the first chef!'}</EmptyTitle>
+              <EmptyDescription>
+                {getRandomNoChefMessage()}
+              </EmptyDescription>
+              <ButtonGroup>
+                {selectedUniversity !== 'all' && (
+                  <BecomeChefButton to="/create-food-listing">
+                    Become a Chef
+                  </BecomeChefButton>
+                )}
+                <ResetFiltersButton onClick={() => { 
+                  setSelectedUniversity('all'); 
+                  setSelectedArea('all'); 
+                  setSelectedDepartment('all'); 
+                }}>
+                  Reset Filters
+                </ResetFiltersButton>
+              </ButtonGroup>
+            </EmptyResultsContainer>
+          )}
         </ScrollableContainer>
         
         <ViewAllButton to="/food-marketplace">View All Chef Options</ViewAllButton>
