@@ -259,6 +259,24 @@ const NoResults = styled.div`
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 `;
 
+const CreateFoodButton = styled(Link)`
+  display: inline-block;
+  margin-top: 20px;
+  padding: 0.75rem 1.5rem;
+  background-color: #ff6b35;
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #ff5719;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+`;
+
 const categories = [
   'All', 'Breakfast', 'Lunch', 'Dinner', 'Desserts', 'Snacks', 
   'Vegetarian', 'Vegan', 'Gluten-Free', 'International'
